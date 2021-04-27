@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.bjsxt.mapper.UsersMapper">
+    <resultMap id="usersMapper" type="com.bjsxt.pojo.Users">
+        <!--property对应的是对象里面的属性名,column对应的是结果集的列-->
+        <id property="userid" column="id"/>
+        <result property="username" column="name"/>
+        <result property="usersex" column="sex"/>
+    </resultMap>
+    <select id="selectUsersAll" resultMap="usersMapper">
+        select userid as id,username as name,usersex as sex from users;
+    </select>
+
+    <!--一对一的关联查询映射-->
+    <resultMap id="usersAndRolesMapper" type="com.bjsxt.pojo.Users">
+        <id property="userid" column="userid"/>
+        <result property="username" column="username"/>
+        <result property="usersex" column="usersex"/>
+        <association property="roles" javaType="com.bjsxt.pojo.Roles">
+            <id property="roleid" column="roleid"/>
+            <result property="rolename" column="rolename"/>
+        </association>
+    </resultMap>
+    <select id="selectUsersAndRoles" resultMap="usersAndRolesMapper">
+        select * from users as u,roles as r where u.userid = r.user_id and u.userid = #{userid}
+    </select>
+
+    <!--一对多映射关系-->
+    <resultMap id="usersAndOrdersMapper" type="com.bjsxt.pojo.Users">
+        <id property="userid" column="userid"/>
+        <result property="username" column="username"/>
+        <result property="usersex" column="usersex"/>
+        <collection property="orders" ofType="com.bjsxt.pojo.Orders">
+            <id property="orderid" column="orderid"/>
+            <result property="orderprice" column="orderprice"/>
+        </collection>
+    </resultMap>
+    <!--根据用户id查询用户以及该用户对应的所有订单-->
+    <select id="selectUsersAndOrders" resultMap="usersAndOrdersMapper">
+        select * from users as u ,orders as o where u.userid = o.user_id and u.userid = #{userid}
+    </select>
+
+    <!--多对多关联查询-->
+    <resultMap id="usersAndOrdersAndItems" type="com.bjsxt.pojo.Users">
+        <id property="userid" column="userid"/>
+        <result property="username" column="username"/>
+        <result property="usersex" column="usersex"/>
+        <collection property="orders" ofType="com.bjsxt.pojo.Orders">
+            <id property="orderid" column="orderid"/>
+            <result property="orderprice" column="orderprice"/>
+            <collection property="items" ofType="com.bjsxt.pojo.Items">
+                <id property="itemid" column="itemid"/>
+                <result property="itemid" column="itemid"/>
+                <result property="itemname" column="itemname"/>
+                <result property="itemprice" column="itemprice"/>
+            </collection>
+        </collection>
+    </resultMap>
+    <!--根据用户ID查询用户与订单以及订单中所包含的商品-->
+    <select id="selectUsersAndOrdersAndItems" resultMap="usersAndOrdersAndItems">
+        select * from users as u,orders as o, orders_items as oi ,items as i where u.userid = o.user_id and o.orderid = oi.order_id and oi.item_id = i.itemid and u.userid = #{userid}
+    </select>
+
+    <!--延迟加载-->
+    <resultMap id="usersAndOrdersMapperLazy" type="com.bjsxt.pojo.Users">
+        <id property="userid" column="userid"/>
+        <result property="username" column="username"/>
+        <result property="usersex" column="usersex"/>
+        <collection property="orders" ofType="com.bjsxt.pojo.Orders" fetchType="lazy" select="selectOrdersByUserId" column="userid"/>
+    </resultMap>
+    <!--根据用户id查询用户-->
+    <select id="selectUsersByIdLazy" resultMap="usersAndOrdersMapperLazy">
+        select * from users where userid = #{userid}
+    </select>
+    <!--根据用户id查询订单-->
+    <select id="selectOrdersByUserId" resultType="com.bjsxt.pojo.Orders">
+        select * from orders where user_id = #{userid}
+    </select>
+</mapper>
